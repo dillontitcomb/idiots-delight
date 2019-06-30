@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<link rel="stylesheet" href="style.css" />
+		<title>Document</title>
+	</head>
+	<body>
+		<div class="container">
+			<h1>Welcome to Idiot's Delight, the Thinking Man's Game</h1>
+			<h3>Click 'deal' to begin</h3>
+			<div class="game-board">
+				<div class="stack stack-one">
+					<div onclick="handleClickCard(event)" class="card"></div>
+				</div>
+				<div class="stack stack-two">
+					<div onclick="handleClickCard(event)" class="card"></div>
+				</div>
+				<div class="stack stack-three">
+					<div onclick="handleClickCard(event)" class="card"></div>
+				</div>
+				<div class="stack stack-four">
+					<div onclick="handleClickCard(event)" class="card"></div>
+				</div>
+			</div>
+			<button onclick="handleClickDeal()">DEAL</button>
+		</div>
+		<script src="index.js"></script>
+	</body>
+</html>
