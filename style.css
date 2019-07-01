@@ -22,3 +22,7 @@
 .game-board {
 	display: flex;
 }
+
+#game {
+	display: none;
+}

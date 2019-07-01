@@ -9,23 +9,29 @@
 	</head>
 	<body>
 		<div class="container">
-			<h1>Welcome to Idiot's Delight, the Thinking Man's Game</h1>
-			<h3>Click 'deal' to begin</h3>
-			<div class="game-board">
-				<div class="stack stack-one">
-					<div onclick="handleClickCard(event)" class="card"></div>
-				</div>
-				<div class="stack stack-two">
-					<div onclick="handleClickCard(event)" class="card"></div>
-				</div>
-				<div class="stack stack-three">
-					<div onclick="handleClickCard(event)" class="card"></div>
-				</div>
-				<div class="stack stack-four">
-					<div onclick="handleClickCard(event)" class="card"></div>
-				</div>
+			<div id="setup">
+				<h1>Welcome to Idiot's Delight, the Thinking Man's Game</h1>
+				<h3>Click 'Start Game' to begin</h3>
+				<button onclick="handleStartGame()">Start Game</button>
 			</div>
-			<button onclick="handleClickDeal()">DEAL</button>
+			<div id="game">
+				<h1>Welcome to Idiot's Delight, the Thinking Man's Game</h1>
+				<div class="game-board">
+					<div class="stack stack-1">
+						<div onclick="handleClickCard(event)" class="card"></div>
+					</div>
+					<div class="stack stack-2">
+						<div onclick="handleClickCard(event)" class="card"></div>
+					</div>
+					<div class="stack stack-3">
+						<div onclick="handleClickCard(event)" class="card"></div>
+					</div>
+					<div class="stack stack-4">
+						<div onclick="handleClickCard(event)" class="card"></div>
+					</div>
+				</div>
+				<button onclick="handleClickDeal()">DEAL</button>
+			</div>
 		</div>
 		<script src="index.js"></script>
 	</body>
