@@ -4,6 +4,13 @@
 
 ### TO DO
 
+- Render card
+- Render card stub
+- Function to move card to empty spot
+  - Click empty stack
+  - handleClickCard moveCard toggled, stack to add to stored
+  - next handleClickCard moves card, un-toggles moveCard
+
 ##### LOGIC
 
 - Create deck of cards

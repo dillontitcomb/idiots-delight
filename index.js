@@ -1,4 +1,8 @@
 const DEF_STACKS = 4;
+const CARD_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+const CARD_SUITS = ['spades', 'clubs', 'hearts', 'diamonds'];
+const CARD_NAME_LOOKUP = { 11: 'jack', 12: 'queen', 13: 'king', 14: 'ace' };
+
 const renderedCards = document.getElementsByClassName('card');
 const setupDisplay = document.getElementById('setup');
 const gameDisplay = document.getElementById('game');
@@ -49,10 +53,6 @@ function handleStartGame() {
 	console.log(game);
 }
 
-const cardValues = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
-const cardSuits = ['spades', 'clubs', 'hearts', 'diamonds'];
-const cardNameLookup = { 11: 'jack', 12: 'queen', 13: 'king', 14: 'ace' };
-
 class Deck {
 	constructor() {
 		this.cards = this.buildDeck();
@@ -60,8 +60,8 @@ class Deck {
 	}
 	buildDeck() {
 		let cards = [];
-		cardSuits.forEach(suit => {
-			cardValues.forEach(value => {
+		CARD_SUITS.forEach(suit => {
+			CARD_VALUES.forEach(value => {
 				let newCard = new Card(value, suit);
 				cards.push(newCard);
 			});
@@ -117,7 +117,7 @@ class Card {
 	constructor(value, suit) {
 		this.value = value;
 		this.suit = suit;
-		this.name = `${cardNameLookup[value] || value} of ${suit}`;
+		this.name = `${CARD_NAME_LOOKUP[value] || value} of ${suit}`;
 	}
 	isBeatenBy(card) {
 		// make exception for card being undefined / null
