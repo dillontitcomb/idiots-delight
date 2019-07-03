@@ -1,17 +1,17 @@
 const DEF_STACKS = 4;
 const CARD_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 const CARD_SUITS = ['spades', 'clubs', 'hearts', 'diamonds'];
-const CARD_NAME_LOOKUP = { 11: 'jack', 12: 'queen', 13: 'king', 14: 'ace' };
+const CARD_NAME_LOOKUP = { 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
 
 const CARD_ICON_LOOKUP = {
-	heart: 'fas fa-heart',
-	diamond: 'fas fa-diamond',
-	spade: 'fas fa-spade',
-	club: 'fas fa-club',
-	jack: 'fas chess-knight',
-	queen: 'fas fa-chess-queen',
-	king: 'fas fa-crown',
-	ace: 'fas fa-font'
+	hearts: 'fas fa-heart',
+	diamonds: 'fas fa-diamond',
+	spades: 'fas fa-spade',
+	clubs: 'fas fa-club',
+	11: 'fas chess-knight',
+	12: 'fas fa-chess-queen',
+	13: 'fas fa-crown',
+	14: 'fas fa-font'
 };
 const CARD_COLOR_LOOKUP = {
 	heart: 'red',
@@ -23,14 +23,8 @@ const CARD_COLOR_LOOKUP = {
 const renderedCards = document.getElementsByClassName('card');
 const setupDisplay = document.getElementById('setup');
 const gameDisplay = document.getElementById('game');
+const testStack = document.getElementById('stack-5');
 let game;
-
-function render(htmlContent, node) {
-	if (!node) return;
-	node.innerHTML = htmlContent;
-}
-
-function generateCardHtml(card) {}
 
 function updateInterface() {
 	for (let i = 0; i < renderedCards.length; i++) {
@@ -173,3 +167,24 @@ class CardStack {
 		return this.cards.length === 0;
 	}
 }
+
+function renderCard(card, isActive) {
+	let cardClass = isActive ? 'card' : 'card card-stub';
+	let cardName = CARD_NAME_LOOKUP[card.value] || card.value;
+	let cardSuitIcon = CARD_ICON_LOOKUP[card.suit];
+	let cardLgIcon = CARD_ICON_LOOKUP[card.value];
+	let cardColor =
+		card.suit === 'hearts' || card.suit === 'diamonds' ? 'red' : 'black';
+	return `<div class="${cardClass}" style="color: ${cardColor};">
+		<div class="card-top">${cardName}<i class="${cardSuitIcon}"></i></div>
+		<div class="card-mid">
+			<i class="${cardLgIcon} card-center"></i>
+		</div>
+		<div class="card-bot">${cardName}<i class="${cardSuitIcon}"></i></div>
+	</div>`;
+}
+
+const c = new Card(14, 'clubs');
+testStack.innerHTML = renderCard(c, true);
+
+console.log(CARD_ICON_LOOKUP[c.suit]);

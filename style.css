@@ -43,11 +43,10 @@ body {
 	flex-direction: column;
 	border-radius: 3%;
 	overflow: hidden;
-	box-shadow: 0 4px 5px -2px, 4px 0px 5px -2px gray;
+	box-shadow: 0 4px 5px -2px gray, 4px 0px 5px -2px gray;
 }
 
 .card-top {
-	color: red;
 	font-size: var(--card-font-size);
 	padding: 0.5rem;
 	flex: 1;
@@ -66,7 +65,6 @@ body {
 }
 
 .card-bot {
-	color: red;
 	font-size: var(--card-font-size);
 	padding: 0.5rem;
 	flex: 1;
@@ -91,9 +89,6 @@ body {
 	display: flex;
 }
 
-i.fa-font {
-	color: red;
-}
 i.fa-spade {
 	color: black;
 }
