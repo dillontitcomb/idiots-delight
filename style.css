@@ -19,22 +19,29 @@ body {
 }
 
 .container {
-	max-width: 1100px;
+	max-width: 1200px;
 	margin: auto;
 	overflow: hidden;
 	padding: 0 2rem;
 	text-align: center;
 }
 
+.stacks {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+	background-color: #dddddd;
+}
+
 .stack {
 	display: flex;
 	flex-direction: column;
 	flex: 1;
-	margin: 1rem;
-	background-color: #dddddd;
-	padding: 1rem;
+	margin: 0.5rem;
+	padding: 0.5rem;
 }
 .card {
+	border: 1px solid #fff;
 	margin: auto;
 	height: 350px;
 	width: 250px;
@@ -43,7 +50,7 @@ body {
 	flex-direction: column;
 	border-radius: 3%;
 	overflow: hidden;
-	box-shadow: 0 4px 5px -2px gray, 4px 0px 5px -2px gray;
+	box-shadow: 0 -4px 3px -2px gray, 4px 0px 3px -2px gray;
 }
 
 .card-top {
@@ -79,14 +86,9 @@ body {
 }
 
 .card-stub {
-	margin-bottom: -30px;
-	height: 100px;
-	box-shadow: 4px 0px 5px -2px gray;
+	margin-bottom: -280px;
+	box-shadow: 0 -4px 3px -2px gray, 4px 0px 3px -2px gray;
 	border-radius: 3% 3% 0 0;
-}
-
-.game-board {
-	display: flex;
 }
 
 i.fa-spade {

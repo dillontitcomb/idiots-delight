@@ -8,10 +8,10 @@ const CARD_ICON_LOOKUP = {
 	diamonds: 'fas fa-diamond',
 	spades: 'fas fa-spade',
 	clubs: 'fas fa-club',
-	11: 'fas chess-knight',
+
+	11: 'fas fa-chess-knight',
 	12: 'fas fa-chess-queen',
-	13: 'fas fa-crown',
-	14: 'fas fa-font'
+	13: 'fas fa-crown'
 };
 const CARD_COLOR_LOOKUP = {
 	heart: 'red',
@@ -24,6 +24,11 @@ const renderedCards = document.getElementsByClassName('card');
 const setupDisplay = document.getElementById('setup');
 const gameDisplay = document.getElementById('game');
 const testStack = document.getElementById('stack-5');
+const testStack1 = document.getElementById('stack-6');
+const testStack2 = document.getElementById('stack-7');
+const testStacks = [testStack, testStack1, testStack2];
+console.log(testStacks);
+
 let game;
 
 function updateInterface() {
@@ -33,9 +38,15 @@ function updateInterface() {
 }
 
 function handleClickCard(e) {
-	// get stack from click event
-	let stackNumber = e.path[1].className.split(' ')[1].split('-')[1];
-	let stack = game.stacks[parseInt(stackNumber) - 1];
+	let stackNum;
+	// Check path for stack number
+	e.path.forEach(p => {
+		if (p.id && p.id.includes('stack')) {
+			stackNum = p.id.split('-')[1];
+		}
+	});
+	console.log(stackNum);
+	let stack = game.stacks[parseInt(stackNum) - 1];
 	// determine if stack is empty or has cards
 	let empty = stack.isEmpty();
 	if (empty) {
@@ -149,8 +160,8 @@ class Card {
 }
 
 class CardStack {
-	constructor() {
-		this.cards = [];
+	constructor(cards) {
+		this.cards = cards || [];
 	}
 	getActiveCard() {
 		return this.cards[this.cards.length - 1];
@@ -172,19 +183,44 @@ function renderCard(card, isActive) {
 	let cardClass = isActive ? 'card' : 'card card-stub';
 	let cardName = CARD_NAME_LOOKUP[card.value] || card.value;
 	let cardSuitIcon = CARD_ICON_LOOKUP[card.suit];
-	let cardLgIcon = CARD_ICON_LOOKUP[card.value];
+	let cardLgIcon = CARD_ICON_LOOKUP[card.value] || '';
 	let cardColor =
 		card.suit === 'hearts' || card.suit === 'diamonds' ? 'red' : 'black';
-	return `<div class="${cardClass}" style="color: ${cardColor};">
-		<div class="card-top">${cardName}<i class="${cardSuitIcon}"></i></div>
+	return `<div onclick="handleClickCard(event)" class="${cardClass}" style="color: ${cardColor};">
+		<div class="card-top">${cardName} <i class="${cardSuitIcon}"></i></div>
 		<div class="card-mid">
-			<i class="${cardLgIcon} card-center"></i>
+			<span class="${cardLgIcon} card-center" ${
+		cardLgIcon ? '' : 'style="font-size: 9rem"'
+	}>${cardLgIcon ? '' : cardName}</span>
 		</div>
-		<div class="card-bot">${cardName}<i class="${cardSuitIcon}"></i></div>
+		<div class="card-bot">${cardName} <i class="${cardSuitIcon}"></i></div>
 	</div>`;
 }
 
-const c = new Card(14, 'clubs');
-testStack.innerHTML = renderCard(c, true);
+const a = new Card(2, 'clubs');
+const b = new Card(5, 'diamonds');
+const c = new Card(12, 'hearts');
+const stack = new CardStack([a, b, c]);
+console.log(stack);
+const d = new Card(4, 'spades');
+const e = new Card(5, 'clubs');
+const f = new Card(13, 'clubs');
+const stack2 = new CardStack([d, e, f]);
 
-console.log(CARD_ICON_LOOKUP[c.suit]);
+const g = new Card(4, 'diamonds');
+const stack3 = new CardStack([g]);
+const stackObjs = [stack, stack2, stack3];
+
+function renderStack(stack) {
+	let html = '';
+	stack.cards.forEach((card, i) => {
+		let lastCard = false;
+		if (i == stack.cards.length - 1) lastCard = true;
+		html += lastCard ? renderCard(card, true) : renderCard(card, false);
+	});
+	return html;
+}
+console.log(testStacks);
+testStacks.forEach((stack, i) => {
+	stack.innerHTML = renderStack(stackObjs[i]);
+});
