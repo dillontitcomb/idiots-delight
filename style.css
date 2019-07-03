@@ -1,26 +1,110 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+
+:root {
+	--primary-color: #003699;
+	--card-font-size: 1.4rem;
+}
+
+* {
+	box-sizing: border-box;
+	padding: 0;
+	margin: 0;
+}
+
+body {
+	font-family: 'Roboto', sans-serif;
+	line-height: 1.6;
+	background: #fff;
+	color: #333;
+}
+
 .container {
-	text-align: center;
+	max-width: 1100px;
 	margin: auto;
+	overflow: hidden;
+	padding: 0 2rem;
+	text-align: center;
 }
 
 .stack {
 	display: flex;
-	justify-content: center;
-	align-content: center;
+	flex-direction: column;
 	flex: 1;
 	margin: 1rem;
-	background-color: red;
-	height: 300px;
+	background-color: #dddddd;
+	padding: 1rem;
 }
 .card {
 	margin: auto;
-	height: 250px;
-	width: 200px;
-	background-color: blue;
+	height: 350px;
+	width: 250px;
+	background-color: white;
+	display: flex;
+	flex-direction: column;
+	border-radius: 3%;
+	overflow: hidden;
+	box-shadow: 0 4px 5px -2px, 4px 0px 5px -2px gray;
+}
+
+.card-top {
+	color: red;
+	font-size: var(--card-font-size);
+	padding: 0.5rem;
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+}
+.card-mid {
+	flex: 4;
+	display: flex;
+	align-items: center;
+}
+
+.card-mid-icon {
+	flex: 1;
+}
+
+.card-bot {
+	color: red;
+	font-size: var(--card-font-size);
+	padding: 0.5rem;
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+}
+
+.card-center {
+	font-size: 8rem;
+	flex: 1;
+}
+
+.card-stub {
+	margin-bottom: -30px;
+	height: 100px;
+	box-shadow: 4px 0px 5px -2px gray;
+	border-radius: 3% 3% 0 0;
 }
 
 .game-board {
 	display: flex;
+}
+
+i.fa-font {
+	color: red;
+}
+i.fa-spade {
+	color: black;
+}
+i.fa-club {
+	color: black;
+}
+i.fa-heart {
+	color: red;
+}
+i.fa-diamond {
+	color: red;
 }
 
 #game {

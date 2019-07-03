@@ -3,10 +3,34 @@ const CARD_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 const CARD_SUITS = ['spades', 'clubs', 'hearts', 'diamonds'];
 const CARD_NAME_LOOKUP = { 11: 'jack', 12: 'queen', 13: 'king', 14: 'ace' };
 
+const CARD_ICON_LOOKUP = {
+	heart: 'fas fa-heart',
+	diamond: 'fas fa-diamond',
+	spade: 'fas fa-spade',
+	club: 'fas fa-club',
+	jack: 'fas chess-knight',
+	queen: 'fas fa-chess-queen',
+	king: 'fas fa-crown',
+	ace: 'fas fa-font'
+};
+const CARD_COLOR_LOOKUP = {
+	heart: 'red',
+	diamond: 'red',
+	spade: 'black',
+	club: 'black'
+};
+
 const renderedCards = document.getElementsByClassName('card');
 const setupDisplay = document.getElementById('setup');
 const gameDisplay = document.getElementById('game');
 let game;
+
+function render(htmlContent, node) {
+	if (!node) return;
+	node.innerHTML = htmlContent;
+}
+
+function generateCardHtml(card) {}
 
 function updateInterface() {
 	for (let i = 0; i < renderedCards.length; i++) {
