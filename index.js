@@ -20,57 +20,64 @@ const CARD_COLOR_LOOKUP = {
 	club: 'black'
 };
 
-const renderedCards = document.getElementsByClassName('card');
 const setupDisplay = document.getElementById('setup');
 const gameDisplay = document.getElementById('game');
-const testStack = document.getElementById('stack-5');
-const testStack1 = document.getElementById('stack-6');
-const testStack2 = document.getElementById('stack-7');
-const testStacks = [testStack, testStack1, testStack2];
-console.log(testStacks);
-
+const stackNode1 = document.getElementById('stack-1');
+const stackNode2 = document.getElementById('stack-2');
+const stackNode3 = document.getElementById('stack-3');
+const stackNode4 = document.getElementById('stack-4');
+const stackNodes = [stackNode1, stackNode2, stackNode3, stackNode4];
+stackNodes.forEach(node => node.addEventListener('click', handleClickStack));
 let game;
 
-function updateInterface() {
-	for (let i = 0; i < renderedCards.length; i++) {
-		renderedCards[i].innerHTML = game.getActiveCards()[i].name;
-	}
-}
-
-function handleClickCard(e) {
+function handleClickStack(e) {
 	let stackNum;
-	// Check path for stack number
 	e.path.forEach(p => {
 		if (p.id && p.id.includes('stack')) {
 			stackNum = p.id.split('-')[1];
 		}
 	});
-	console.log(stackNum);
 	let stack = game.stacks[parseInt(stackNum) - 1];
-	// determine if stack is empty or has cards
 	let empty = stack.isEmpty();
 	if (empty) {
+		game.isTransferringCard = true;
+		game.stackReceivingCard = stack;
 		// player must select card to add to stack
-		console.log('There is no card to click!');
+		console.log('Selecting card to move to empty stack...');
+		console.log('Stack recieving card:');
+		console.log(game.stackReceivingCard);
 	} else {
-		// card is removed if beatable by other active card
-		let currentCard = stack.getActiveCard();
-		let activeCards = game.getActiveCards();
-		// TODO: if more than one card beats the current card, only remove one card from stack, ending loop
-		activeCards.forEach(card => {
-			if (currentCard.isBeatenBy(card)) {
-				stack.removeCard();
-				console.log(`Card Removed: ${currentCard.name}`);
-				return;
+		if (game.isTransferringCard) {
+			stack.transferCard(game.stackReceivingCard);
+			game.renderStacks();
+			game.isTransferringCard = false;
+		} else {
+			// card is removed if beatable by other active card
+			let currentCard = stack.getActiveCard();
+			let activeCards = game.getActiveCards();
+			// TODO: if more than one card beats the current card, only remove one card from stack, ending loop
+			for (let i = 0; i < activeCards.length; i++) {
+				if (currentCard.isBeatenBy(activeCards[i])) {
+					stack.removeCard();
+					game.renderStacks();
+					console.log(`Card Removed: ${currentCard.name}`);
+					return;
+				}
 			}
-		});
+		}
 	}
 	console.log('card clicked!');
 }
 
 function handleClickDeal() {
-	game.deal();
-	console.log('deal clicked!');
+	if (game) {
+		game.deal();
+		console.log('New cards dealt!');
+	} else {
+		game = new Game();
+		game.begin();
+		console.log('Begin game!');
+	}
 }
 
 function handleStartGame() {
@@ -117,11 +124,12 @@ class Game {
 	constructor() {
 		this.deck = new Deck();
 		this.stacks = this.buildStacks(DEF_STACKS);
+		this.isTransferringCard = false;
+		this.stackReceivingCard = null;
 	}
 	begin() {
 		this.deck.shuffle();
 		this.deal();
-		updateInterface();
 	}
 	buildStacks(numOfStacks) {
 		let stacks = [];
@@ -130,10 +138,16 @@ class Game {
 		}
 		return stacks;
 	}
+	renderStacks() {
+		this.stacks.forEach((stack, i) => {
+			stackNodes[i].innerHTML = renderStack(stack);
+		});
+	}
 	deal() {
 		for (let i = 0; i < DEF_STACKS; i++) {
 			this.stacks[i].cards.push(this.deck.removeCard());
 		}
+		this.renderStacks();
 	}
 	getActiveCards() {
 		let active = [];
@@ -149,8 +163,11 @@ class Card {
 		this.name = `${CARD_NAME_LOOKUP[value] || value} of ${suit}`;
 	}
 	isBeatenBy(card) {
-		// make exception for card being undefined / null
-		if (!card) return false;
+		if (!card) {
+			console.log('Card is falsy');
+			return false;
+		}
+		console.log(`Checking if ${card.name} beats ${this.name}`);
 		if (this.suit == card.suit && card.value > this.value) {
 			return true;
 		} else {
@@ -177,6 +194,9 @@ class CardStack {
 	isEmpty() {
 		return this.cards.length === 0;
 	}
+	transferCard(stack) {
+		stack.addCard(this.cards.pop());
+	}
 }
 
 function renderCard(card, isActive) {
@@ -186,7 +206,7 @@ function renderCard(card, isActive) {
 	let cardLgIcon = CARD_ICON_LOOKUP[card.value] || '';
 	let cardColor =
 		card.suit === 'hearts' || card.suit === 'diamonds' ? 'red' : 'black';
-	return `<div onclick="handleClickCard(event)" class="${cardClass}" style="color: ${cardColor};">
+	return `<div class="${cardClass}" style="color: ${cardColor};">
 		<div class="card-top">${cardName} <i class="${cardSuitIcon}"></i></div>
 		<div class="card-mid">
 			<span class="${cardLgIcon} card-center" ${
@@ -197,20 +217,6 @@ function renderCard(card, isActive) {
 	</div>`;
 }
 
-const a = new Card(2, 'clubs');
-const b = new Card(5, 'diamonds');
-const c = new Card(12, 'hearts');
-const stack = new CardStack([a, b, c]);
-console.log(stack);
-const d = new Card(4, 'spades');
-const e = new Card(5, 'clubs');
-const f = new Card(13, 'clubs');
-const stack2 = new CardStack([d, e, f]);
-
-const g = new Card(4, 'diamonds');
-const stack3 = new CardStack([g]);
-const stackObjs = [stack, stack2, stack3];
-
 function renderStack(stack) {
 	let html = '';
 	stack.cards.forEach((card, i) => {
@@ -220,7 +226,3 @@ function renderStack(stack) {
 	});
 	return html;
 }
-console.log(testStacks);
-testStacks.forEach((stack, i) => {
-	stack.innerHTML = renderStack(stackObjs[i]);
-});

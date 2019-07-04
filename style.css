@@ -14,7 +14,7 @@
 body {
 	font-family: 'Roboto', sans-serif;
 	line-height: 1.6;
-	background: #fff;
+	background-color: #dddddd;
 	color: #333;
 }
 
@@ -22,7 +22,7 @@ body {
 	max-width: 1200px;
 	margin: auto;
 	overflow: hidden;
-	padding: 0 2rem;
+	padding: 2rem 2rem;
 	text-align: center;
 }
 
@@ -34,11 +34,10 @@ body {
 }
 
 .stack {
+	min-height: 350px;
 	display: flex;
 	flex-direction: column;
 	flex: 1;
-	margin: 0.5rem;
-	padding: 0.5rem;
 }
 .card {
 	border: 1px solid #fff;
@@ -106,4 +105,13 @@ i.fa-diamond {
 
 #game {
 	display: none;
+}
+
+.btn {
+	margin-top: 60px;
+	height: 50px;
+	width: 150px;
+	background: black;
+	color: white;
+	text-align: center;
 }
