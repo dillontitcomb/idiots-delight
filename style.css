@@ -19,6 +19,7 @@ body {
 }
 
 .container {
+	height: 100vh;
 	max-width: 1200px;
 	margin: auto;
 	overflow: hidden;
@@ -107,11 +108,43 @@ i.fa-diamond {
 	display: none;
 }
 
+.start-menu {
+	margin-top: 1rem;
+}
+
+.landing-header {
+	margin-top: 4rem;
+}
+
+#how-to-play {
+	display: none;
+}
+
+.how-to-play-header {
+	margin-top: 2rem;
+}
+
+.instructions {
+	margin: auto;
+	margin-top: 2rem;
+	max-width: 600px;
+	text-align: left;
+}
+
 .btn {
-	margin-top: 60px;
-	height: 50px;
-	width: 150px;
+	display: block;
+	margin: auto;
+	margin-top: 2rem;
+	height: 40px;
+	width: 120px;
 	background: black;
 	color: white;
 	text-align: center;
+}
+a {
+	text-decoration: none;
+}
+
+li {
+	margin-top: 0.5rem;
 }

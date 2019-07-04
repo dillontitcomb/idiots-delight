@@ -1,3 +1,9 @@
+//
+
+// CONSTANTS
+
+//
+
 const DEF_STACKS = 4;
 const CARD_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 const CARD_SUITS = ['spades', 'clubs', 'hearts', 'diamonds'];
@@ -20,6 +26,12 @@ const CARD_COLOR_LOOKUP = {
 	club: 'black'
 };
 
+//
+
+// DOM NODES
+
+//
+
 const setupDisplay = document.getElementById('setup');
 const gameDisplay = document.getElementById('game');
 const stackNode1 = document.getElementById('stack-1');
@@ -30,64 +42,11 @@ const stackNodes = [stackNode1, stackNode2, stackNode3, stackNode4];
 stackNodes.forEach(node => node.addEventListener('click', handleClickStack));
 let game;
 
-function handleClickStack(e) {
-	let stackNum;
-	e.path.forEach(p => {
-		if (p.id && p.id.includes('stack')) {
-			stackNum = p.id.split('-')[1];
-		}
-	});
-	let stack = game.stacks[parseInt(stackNum) - 1];
-	let empty = stack.isEmpty();
-	if (empty) {
-		game.isTransferringCard = true;
-		game.stackReceivingCard = stack;
-		// player must select card to add to stack
-		console.log('Selecting card to move to empty stack...');
-		console.log('Stack recieving card:');
-		console.log(game.stackReceivingCard);
-	} else {
-		if (game.isTransferringCard) {
-			stack.transferCard(game.stackReceivingCard);
-			game.renderStacks();
-			game.isTransferringCard = false;
-		} else {
-			// card is removed if beatable by other active card
-			let currentCard = stack.getActiveCard();
-			let activeCards = game.getActiveCards();
-			// TODO: if more than one card beats the current card, only remove one card from stack, ending loop
-			for (let i = 0; i < activeCards.length; i++) {
-				if (currentCard.isBeatenBy(activeCards[i])) {
-					stack.removeCard();
-					game.renderStacks();
-					console.log(`Card Removed: ${currentCard.name}`);
-					return;
-				}
-			}
-		}
-	}
-	console.log('card clicked!');
-}
+//
 
-function handleClickDeal() {
-	if (game) {
-		game.deal();
-		console.log('New cards dealt!');
-	} else {
-		game = new Game();
-		game.begin();
-		console.log('Begin game!');
-	}
-}
+// CLASSES
 
-function handleStartGame() {
-	game = new Game();
-	game.begin();
-
-	setupDisplay.style = 'display: none';
-	gameDisplay.style = 'display: inherit';
-	console.log(game);
-}
+//
 
 class Deck {
 	constructor() {
@@ -144,16 +103,21 @@ class Game {
 		});
 	}
 	deal() {
-		for (let i = 0; i < DEF_STACKS; i++) {
-			this.stacks[i].cards.push(this.deck.removeCard());
+		if (this.deck.cards.length == 0) {
+			this.gameOver();
+		} else {
+			for (let i = 0; i < DEF_STACKS; i++) {
+				this.stacks[i].cards.push(this.deck.removeCard());
+			}
+			this.renderStacks();
 		}
-		this.renderStacks();
 	}
 	getActiveCards() {
 		let active = [];
 		this.stacks.forEach(stack => active.push(stack.getActiveCard()));
 		return active;
 	}
+	gameOver() {}
 }
 
 class Card {
@@ -199,6 +163,12 @@ class CardStack {
 	}
 }
 
+//
+
+// DOM RENDERING
+
+//
+
 function renderCard(card, isActive) {
 	let cardClass = isActive ? 'card' : 'card card-stub';
 	let cardName = CARD_NAME_LOOKUP[card.value] || card.value;
@@ -225,4 +195,67 @@ function renderStack(stack) {
 		html += lastCard ? renderCard(card, true) : renderCard(card, false);
 	});
 	return html;
+}
+
+//
+
+// CLICK EVENTS
+
+//
+
+// TODO: Refactor into multiple functions
+function handleClickStack(e) {
+	let stackNum;
+	e.path.forEach(p => {
+		if (p.id && p.id.includes('stack')) {
+			stackNum = p.id.split('-')[1];
+		}
+	});
+	let stack = game.stacks[parseInt(stackNum) - 1];
+	let empty = stack.isEmpty();
+	if (empty) {
+		game.isTransferringCard = true;
+		game.stackReceivingCard = stack;
+		// player must select card to add to stack
+		console.log('Selecting card to move to empty stack...');
+		console.log('Stack receiving card:');
+		console.log(game.stackReceivingCard);
+	} else {
+		if (game.isTransferringCard) {
+			stack.transferCard(game.stackReceivingCard);
+			game.renderStacks();
+			game.isTransferringCard = false;
+		} else {
+			// card is removed if beatable by other active card
+			let currentCard = stack.getActiveCard();
+			let activeCards = game.getActiveCards();
+			// TODO: if more than one card beats the current card, only remove one card from stack, ending loop
+			for (let i = 0; i < activeCards.length; i++) {
+				if (currentCard.isBeatenBy(activeCards[i])) {
+					stack.removeCard();
+					game.renderStacks();
+					console.log(`Card Removed: ${currentCard.name}`);
+					return;
+				}
+			}
+		}
+	}
+	console.log('card clicked!');
+}
+
+function handleClickDeal() {
+	if (game) {
+		game.deal();
+		console.log('New cards dealt!');
+	} else {
+		game = new Game();
+		game.begin();
+		console.log('Begin game!');
+	}
+}
+
+function handleStartGame() {
+	game = new Game();
+	game.begin();
+	console.log('Begin game!');
 }
