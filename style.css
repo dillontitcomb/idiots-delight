@@ -19,7 +19,6 @@ body {
 }
 
 .container {
-	height: 100vh;
 	max-width: 1200px;
 	margin: auto;
 	overflow: hidden;
@@ -113,7 +112,7 @@ i.fa-diamond {
 }
 
 .landing-header {
-	margin-top: 4rem;
+	margin-top: 2rem;
 }
 
 #how-to-play {
@@ -134,17 +133,29 @@ i.fa-diamond {
 .btn {
 	display: block;
 	margin: auto;
-	margin-top: 2rem;
+	margin-top: 1rem;
+	margin-bottom: 1rem;
 	height: 40px;
 	width: 120px;
 	background: black;
 	color: white;
 	text-align: center;
 }
+.btn:focus {
+	outline: 0;
+}
+
 a {
 	text-decoration: none;
 }
 
 li {
 	margin-top: 0.5rem;
+}
+
+.result-message {
+	margin: auto;
+	display: block;
+	font-weight: bold;
+	width: 600px;
 }

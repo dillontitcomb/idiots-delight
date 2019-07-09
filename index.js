@@ -34,6 +34,9 @@ const CARD_COLOR_LOOKUP = {
 
 const setupDisplay = document.getElementById('setup');
 const gameDisplay = document.getElementById('game');
+const resultsDisplay = document.getElementById('results');
+const resultsGif = document.getElementById('results-party');
+const stacksDisplay = document.getElementsByClassName('stacks')[0];
 const stackNode1 = document.getElementById('stack-1');
 const stackNode2 = document.getElementById('stack-2');
 const stackNode3 = document.getElementById('stack-3');
@@ -78,6 +81,9 @@ class Deck {
 	removeCard() {
 		return this.cards.pop();
 	}
+	empty() {
+		return this.cards.length < 1;
+	}
 }
 class Game {
 	constructor() {
@@ -85,8 +91,12 @@ class Game {
 		this.stacks = this.buildStacks(DEF_STACKS);
 		this.isTransferringCard = false;
 		this.stackReceivingCard = null;
+		this.resetting = false;
 	}
 	begin() {
+		stacksDisplay.style = 'visibility: visible';
+		resultsDisplay.innerHTML = '';
+		resultsGif.innerHTML = '';
 		this.deck.shuffle();
 		this.deal();
 	}
@@ -104,7 +114,7 @@ class Game {
 	}
 	deal() {
 		if (this.deck.cards.length == 0) {
-			this.gameOver();
+			this.checkGameOver();
 		} else {
 			for (let i = 0; i < DEF_STACKS; i++) {
 				this.stacks[i].cards.push(this.deck.removeCard());
@@ -117,7 +127,47 @@ class Game {
 		this.stacks.forEach(stack => active.push(stack.getActiveCard()));
 		return active;
 	}
-	gameOver() {}
+	getCardsInPlay() {
+		return 52 - (this.deck.cards.length + this.deck.discarded.length);
+	}
+	isOutOfMoves() {
+		if (this.stacks.filter(stack => stack.isRemovable()).length === 0)
+			return true;
+		return false;
+	}
+	checkGameOver() {
+		if (game.deck.cards.length === 0 && game.isOutOfMoves()) {
+			return true;
+		}
+		return false;
+	}
+
+	end() {
+		stacksDisplay.style = 'visibility: hidden';
+		let gameOverMessage;
+		let score = game.getCardsInPlay();
+		if (score > 22) {
+			gameOverMessage = `Woah buddy, you got absolutely wrecked. You scored ${score}. Check yourself first next time`;
+			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/ADr35Z4TvATIc/source.gif" alt="Most interesting man facepalm" />`;
+		} else if (score > 17) {
+			gameOverMessage = `${score}... Not the best, not the worst either. But very close to the worst. Go again?`;
+			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/iA8jqAN2GXSTe/giphy.gif" alt="Lost character amazed" />`;
+		} else if (score > 13) {
+			gameOverMessage = `${score}, huh. Highly mediocre. Try again. Or don't.`;
+			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/3w9EFfTjaLb7q/giphy.gif" alt="Charlie from IASIP" />`;
+		} else if (score > 8) {
+			gameOverMessage = `Nice. Nothing to write home about, but good. You scored ${score}.`;
+			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif" alt="Thumbs up kid" />`;
+		} else if (score > 4) {
+			gameOverMessage = `You got robbed. If only things had gone a bit differently. You scored ${score}.`;
+			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/xVT8eyqSZobZUxCknb/source.mp4" alt="Bball player" />`;
+		} else {
+			gameOverMessage = `HOLY MOTHER OF GOD YOU'VE DONE IT. YOU'RE A LEGEND. IF I'D MADE A LEADERBOARD FOR THIS GAME YOU'D BE AT THE TOP! YOU SCORED A FLAWLESS ${score}!`;
+			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/AVBo5eqFXd3SU/giphy.gif" alt="Lost character amazed" />`;
+		}
+		resultsDisplay.innerHTML = `<h1 class='result-message'>${gameOverMessage}</h1>`;
+		this.resetting = true;
+	}
 }
 
 class Card {
@@ -160,6 +210,15 @@ class CardStack {
 	}
 	transferCard(stack) {
 		stack.addCard(this.cards.pop());
+	}
+	isRemovable() {
+		if (this.isEmpty()) return false;
+		let options = game.getActiveCards();
+		return (
+			options.filter(card => {
+				return this.getActiveCard().isBeatenBy(card);
+			}).length > 0
+		);
 	}
 }
 
@@ -205,6 +264,7 @@ function renderStack(stack) {
 
 // TODO: Refactor into multiple functions
 function handleClickStack(e) {
+	if (game.checkGameOver()) game.end();
 	let stackNum;
 	e.path.forEach(p => {
 		if (p.id && p.id.includes('stack')) {
@@ -244,8 +304,10 @@ function handleClickStack(e) {
 }
 
 function handleClickDeal() {
-	if (game) {
+	console.log(game);
+	if (game && !game.resetting) {
 		game.deal();
+		if (game.checkGameOver()) game.end();
 		console.log('New cards dealt!');
 	} else {
 		game = new Game();
