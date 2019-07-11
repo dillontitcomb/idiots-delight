@@ -50,11 +50,16 @@ let game;
 // CLASSES
 
 //
+
 class CardGroup {
-	constructor(cards) {
-		this.cards = cards || [];
-		this.empty = this.cards.length ? false : true;
-		this.activeCard = this.empty ? null : this.cards[this.cards.length - 1];
+	constructor() {
+		this.cards = [];
+	}
+	get empty() {
+		return this.cards.length ? false : true;
+	}
+	get activeCard() {
+		return this.empty ? null : this.cards[this.cards.length - 1];
 	}
 	shuffle() {
 		let currentIndex = this.cards.length,
@@ -73,9 +78,29 @@ class CardGroup {
 			recipient.cards.push(this.cards.pop());
 		}
 	}
+	receiveCardsFrom(provider, numOfCards) {
+		for (let i = 0; i < numOfCards; i++) {
+			this.cards.push(provider.cards.pop());
+		}
+	}
 }
-const group1 = new CardGroup([1, 2, 3, 4, 5, 6]);
-const group2 = new CardGroup();
+
+class DeckOfCards extends CardGroup {
+	constructor() {
+		super();
+		this.cards = this.buildDeck();
+	}
+	buildDeck() {
+		let cards = [];
+		CARD_SUITS.forEach(suit => {
+			CARD_VALUES.forEach(value => {
+				let newCard = new Card(value, suit);
+				cards.push(newCard);
+			});
+		});
+		return cards;
+	}
+}
 
 class Deck {
 	constructor() {
@@ -347,3 +372,7 @@ function handleStartGame() {
 	game.begin();
 	console.log('Begin game!');
 }
+
+const group1 = new CardGroup();
+const group2 = new CardGroup();
+const group3 = new DeckOfCards(100);
