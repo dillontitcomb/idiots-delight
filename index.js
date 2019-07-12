@@ -4,26 +4,20 @@
 
 //
 
-const DEF_STACKS = 4;
-const CARD_VALUES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
-const CARD_SUITS = ['spades', 'clubs', 'hearts', 'diamonds'];
-const CARD_NAME_LOOKUP = { 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
-
-const CARD_ICON_LOOKUP = {
-	hearts: 'fas fa-heart',
-	diamonds: 'fas fa-diamond',
-	spades: 'fas fa-spade',
-	clubs: 'fas fa-club',
-
-	11: 'fas fa-chess-knight',
-	12: 'fas fa-chess-queen',
-	13: 'fas fa-crown'
-};
-const CARD_COLOR_LOOKUP = {
-	heart: 'red',
-	diamond: 'red',
-	spade: 'black',
-	club: 'black'
+const CONFIG = {
+	STACK_NUMBER: 4,
+	CARD_VALUES: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+	CARD_SUITS: ['spades', 'clubs', 'hearts', 'diamonds'],
+	CARD_NAME_LOOKUP: { 11: 'J', 12: 'Q', 13: 'K', 14: 'A' },
+	CARD_ICON_LOOKUP: {
+		hearts: 'fas fa-heart',
+		diamonds: 'fas fa-diamond',
+		spades: 'fas fa-spade',
+		clubs: 'fas fa-club',
+		11: 'fas fa-chess-knight',
+		12: 'fas fa-chess-queen',
+		13: 'fas fa-crown'
+	}
 };
 
 //
@@ -53,13 +47,13 @@ class Interface {
 	}
 	renderCard(card, isActive) {
 		let cardClass = isActive ? 'card' : 'card card-stub';
-		let cardName = CARD_NAME_LOOKUP[card.value] || card.value;
-		let cardSuitIcon = CARD_ICON_LOOKUP[card.suit];
-		let cardLgIcon = CARD_ICON_LOOKUP[card.value] || '';
+		let cardName = CONFIG.CARD_NAME_LOOKUP[card.value] || card.value;
+		let cardSuitIcon = CONFIG.CARD_ICON_LOOKUP[card.suit];
+		let cardLgIcon = CONFIG.CARD_ICON_LOOKUP[card.value] || '';
 		let cardColor =
 			card.suit === 'hearts' || card.suit === 'diamonds' ? 'red' : 'black';
 		return `
-		<div onclick="handleCardClick(event)" class="${cardClass}" style="color: ${cardColor};">
+		<div class="${cardClass}" style="color: ${cardColor};">
 			<div class="card-top">${cardName} <i class="${cardSuitIcon}"></i></div>
 			<div class="card-mid">
 				<span class="${cardLgIcon} card-center" ${
@@ -126,12 +120,12 @@ class Deck extends CardGroup {
 		super();
 		this.cards = this.buildDeck();
 		this.shuffle();
-		this.discardPile = new DiscardPile();
+		this.discardPile = new CardGroup();
 	}
 	buildDeck() {
 		let cards = [];
-		CARD_SUITS.forEach(suit => {
-			CARD_VALUES.forEach(value => {
+		CONFIG.CARD_SUITS.forEach(suit => {
+			CONFIG.CARD_VALUES.forEach(value => {
 				let newCard = new Card(value, suit);
 				cards.push(newCard);
 			});
@@ -139,12 +133,7 @@ class Deck extends CardGroup {
 		return cards;
 	}
 }
-class DiscardPile extends CardGroup {
-	constructor() {
-		super();
-		this.cards = [];
-	}
-}
+
 class CardStack extends CardGroup {
 	constructor() {
 		super();
@@ -184,7 +173,7 @@ class Card {
 class Game {
 	constructor() {
 		this.deck = new Deck();
-		this.stacks = this.buildStacks(DEF_STACKS);
+		this.stacks = this.buildStacks(CONFIG.STACK_NUMBER);
 		this.interface = new Interface();
 		this.isTransferringCard = false;
 		this.stackReceivingCard = null;
@@ -205,7 +194,7 @@ class Game {
 		if (this.deck.cards.length == 0) {
 			this.checkGameOver();
 		} else {
-			for (let i = 0; i < DEF_STACKS; i++) {
+			for (let i = 0; i < CONFIG.STACK_NUMBER; i++) {
 				this.deck.transferCardsTo(this.stacks[i], 1);
 			}
 			this.interface.renderStacks(this.stacks);
@@ -272,21 +261,24 @@ function handleStackClick(e) {
 			stackNum = p.id.split('-')[1];
 		}
 	});
+	// found specific stack that was clicked
 	let stack = game.stacks[parseInt(stackNum) - 1];
+
 	if (stack.empty) {
+		// game.prepareToTransfer()
 		game.isTransferringCard = true;
 		game.stackReceivingCard = stack;
-		// player must select card to add to stack
-		console.log('Selecting card to move to empty stack...');
-		console.log('Stack receiving card:');
-		console.log(game.stackReceivingCard);
 	} else {
 		if (game.isTransferringCard) {
+			// Transfer has been initiated
+			// game.transferToEmptyStack()
 			stack.transferCardsTo(game.stackReceivingCard, 1);
 			game.interface.renderStacks(game.stacks);
 			game.isTransferringCard = false;
 		} else {
+			// No transfer, so do other behavior
 			// card is removed if beatable by other active card
+			// stack.beatable ? removeCard() : //do nothing
 			let currentCard = stack.activeCard;
 			let activeCards = game.activeCards;
 			// TODO: if more than one card beats the current card, only remove one card from stack, ending loop
@@ -302,11 +294,6 @@ function handleStackClick(e) {
 			}
 		}
 	}
-	console.log('card clicked!');
-}
-
-function handleCardClick(e) {
-	console.log(e);
 }
 
 function handleClickDeal() {
