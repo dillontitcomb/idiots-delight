@@ -28,28 +28,64 @@ const CARD_COLOR_LOOKUP = {
 
 //
 
-// DOM NODES
-
-//
-
-const setupDisplay = document.getElementById('setup');
-const gameDisplay = document.getElementById('game');
-const resultsDisplay = document.getElementById('results');
-const resultsGif = document.getElementById('results-party');
-const stacksDisplay = document.getElementsByClassName('stacks')[0];
-const stackNode1 = document.getElementById('stack-1');
-const stackNode2 = document.getElementById('stack-2');
-const stackNode3 = document.getElementById('stack-3');
-const stackNode4 = document.getElementById('stack-4');
-const stackNodes = [stackNode1, stackNode2, stackNode3, stackNode4];
-stackNodes.forEach(node => node.addEventListener('click', handleClickStack));
-let game;
-
-//
-
 // CLASSES
 
 //
+
+class Interface {
+	constructor() {
+		this.resultsDisplay = document.getElementById('results');
+		this.resultsGif = document.getElementById('results-party');
+		this.stacksDisplay = document.getElementsByClassName('stacks')[0];
+		this.stackGroup = document.getElementsByClassName('stack');
+		this.stackNodes = [
+			this.stackGroup[0],
+			this.stackGroup[1],
+			this.stackGroup[2],
+			this.stackGroup[3]
+		];
+		this.stackNodes.forEach(node =>
+			node.addEventListener('click', handleStackClick)
+		);
+		this.stacksDisplay.style = 'visibility: visible';
+		this.resultsDisplay.innerHTML = '';
+		this.resultsGif.innerHTML = '';
+	}
+	renderCard(card, isActive) {
+		let cardClass = isActive ? 'card' : 'card card-stub';
+		let cardName = CARD_NAME_LOOKUP[card.value] || card.value;
+		let cardSuitIcon = CARD_ICON_LOOKUP[card.suit];
+		let cardLgIcon = CARD_ICON_LOOKUP[card.value] || '';
+		let cardColor =
+			card.suit === 'hearts' || card.suit === 'diamonds' ? 'red' : 'black';
+		return `
+		<div onclick="handleCardClick(event)" class="${cardClass}" style="color: ${cardColor};">
+			<div class="card-top">${cardName} <i class="${cardSuitIcon}"></i></div>
+			<div class="card-mid">
+				<span class="${cardLgIcon} card-center" ${
+			cardLgIcon ? '' : 'style="font-size: 9rem"'
+		}>${cardLgIcon ? '' : cardName}</span>
+			</div>
+			<div class="card-bot">${cardName} <i class="${cardSuitIcon}"></i></div>
+		</div>`;
+	}
+	renderStack(stack) {
+		let html = '';
+		stack.cards.forEach((card, i) => {
+			let lastCard = false;
+			if (i == stack.cards.length - 1) lastCard = true;
+			html += lastCard
+				? this.renderCard(card, true)
+				: this.renderCard(card, false);
+		});
+		return html;
+	}
+	renderStacks(stacks) {
+		stacks.forEach((stack, i) => {
+			this.stackNodes[i].innerHTML = this.renderStack(stack);
+		});
+	}
+}
 
 class CardGroup {
 	constructor() {
@@ -89,6 +125,7 @@ class Deck extends CardGroup {
 	constructor() {
 		super();
 		this.cards = this.buildDeck();
+		this.shuffle();
 		this.discardPile = new DiscardPile();
 	}
 	buildDeck() {
@@ -117,7 +154,7 @@ class CardStack extends CardGroup {
 		return this.empty ? true : false;
 	}
 	get canDestroyCard() {
-		let activeCards = game.getActiveCards();
+		let activeCards = game.activeCards;
 		return (
 			activeCards.filter(card => {
 				return (
@@ -148,15 +185,12 @@ class Game {
 	constructor() {
 		this.deck = new Deck();
 		this.stacks = this.buildStacks(DEF_STACKS);
+		this.interface = new Interface();
 		this.isTransferringCard = false;
 		this.stackReceivingCard = null;
 		this.resetting = false;
 	}
 	begin() {
-		stacksDisplay.style = 'visibility: visible';
-		resultsDisplay.innerHTML = '';
-		resultsGif.innerHTML = '';
-		this.deck.shuffle();
 		this.deal();
 	}
 	buildStacks(numOfStacks) {
@@ -166,11 +200,7 @@ class Game {
 		}
 		return stacks;
 	}
-	renderStacks() {
-		this.stacks.forEach((stack, i) => {
-			stackNodes[i].innerHTML = renderStack(stack);
-		});
-	}
+
 	deal() {
 		if (this.deck.cards.length == 0) {
 			this.checkGameOver();
@@ -178,16 +208,14 @@ class Game {
 			for (let i = 0; i < DEF_STACKS; i++) {
 				this.deck.transferCardsTo(this.stacks[i], 1);
 			}
-			this.renderStacks();
+			this.interface.renderStacks(this.stacks);
 		}
 	}
-	getActiveCards() {
-		let active = [];
-		this.stacks.forEach(stack => active.push(stack.activeCard));
-		return active;
+	get activeCards() {
+		return this.stacks.map(stack => stack.activeCard);
 	}
 	getCardsInPlay() {
-		return 52 - (this.deck.cards.length + this.deck.discardPile.length);
+		return 52 - (this.deck.cards.length + this.deck.discardPile.cards.length);
 	}
 	isOutOfMoves() {
 		if (this.stacks.filter(stack => stack.isRemovable()).length === 0)
@@ -202,7 +230,7 @@ class Game {
 	}
 
 	end() {
-		stacksDisplay.style = 'visibility: hidden';
+		this.interface.stacksDisplay.style = 'visibility: hidden';
 		let gameOverMessage;
 		let score = game.getCardsInPlay();
 		if (score > 22) {
@@ -210,57 +238,23 @@ class Game {
 			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/ADr35Z4TvATIc/source.gif" alt="Most interesting man facepalm" />`;
 		} else if (score > 17) {
 			gameOverMessage = `${score}... Not the best, not the worst either. But very close to the worst. Go again?`;
-			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/iA8jqAN2GXSTe/giphy.gif" alt="Lost character amazed" />`;
+			this.interface.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/iA8jqAN2GXSTe/giphy.gif" alt="Lost character amazed" />`;
 		} else if (score > 13) {
 			gameOverMessage = `${score}, huh. Highly mediocre. Try again. Or don't.`;
-			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/3w9EFfTjaLb7q/giphy.gif" alt="Charlie from IASIP" />`;
+			this.interface.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/3w9EFfTjaLb7q/giphy.gif" alt="Charlie from IASIP" />`;
 		} else if (score > 8) {
 			gameOverMessage = `Nice. Nothing to write home about, but good. You scored ${score}.`;
-			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif" alt="Thumbs up kid" />`;
+			this.interface.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif" alt="Thumbs up kid" />`;
 		} else if (score > 4) {
 			gameOverMessage = `You got robbed. If only things had gone a bit differently. You scored ${score}.`;
-			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/xVT8eyqSZobZUxCknb/source.mp4" alt="Bball player" />`;
+			this.interface.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/xVT8eyqSZobZUxCknb/giphy-downsized.gif" alt="Bball player" />`;
 		} else {
 			gameOverMessage = `HOLY MOTHER OF GOD YOU'VE DONE IT. YOU'RE A LEGEND. IF I'D MADE A LEADERBOARD FOR THIS GAME YOU'D BE AT THE TOP! YOU SCORED A FLAWLESS ${score}!`;
-			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/AVBo5eqFXd3SU/giphy.gif" alt="Lost character amazed" />`;
+			this.interface.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/AVBo5eqFXd3SU/giphy.gif" alt="Lost character amazed" />`;
 		}
-		resultsDisplay.innerHTML = `<h1 class='result-message'>${gameOverMessage}</h1>`;
+		this.interface.resultsDisplay.innerHTML = `<h1 class='result-message'>${gameOverMessage}</h1>`;
 		this.resetting = true;
 	}
-}
-
-//
-
-// DOM RENDERING
-
-//
-
-function renderCard(card, isActive) {
-	let cardClass = isActive ? 'card' : 'card card-stub';
-	let cardName = CARD_NAME_LOOKUP[card.value] || card.value;
-	let cardSuitIcon = CARD_ICON_LOOKUP[card.suit];
-	let cardLgIcon = CARD_ICON_LOOKUP[card.value] || '';
-	let cardColor =
-		card.suit === 'hearts' || card.suit === 'diamonds' ? 'red' : 'black';
-	return `<div class="${cardClass}" style="color: ${cardColor};">
-		<div class="card-top">${cardName} <i class="${cardSuitIcon}"></i></div>
-		<div class="card-mid">
-			<span class="${cardLgIcon} card-center" ${
-		cardLgIcon ? '' : 'style="font-size: 9rem"'
-	}>${cardLgIcon ? '' : cardName}</span>
-		</div>
-		<div class="card-bot">${cardName} <i class="${cardSuitIcon}"></i></div>
-	</div>`;
-}
-
-function renderStack(stack) {
-	let html = '';
-	stack.cards.forEach((card, i) => {
-		let lastCard = false;
-		if (i == stack.cards.length - 1) lastCard = true;
-		html += lastCard ? renderCard(card, true) : renderCard(card, false);
-	});
-	return html;
 }
 
 //
@@ -270,7 +264,7 @@ function renderStack(stack) {
 //
 
 // TODO: Refactor into multiple functions
-function handleClickStack(e) {
+function handleStackClick(e) {
 	if (game.checkGameOver()) game.end();
 	let stackNum;
 	e.path.forEach(p => {
@@ -289,17 +283,17 @@ function handleClickStack(e) {
 	} else {
 		if (game.isTransferringCard) {
 			stack.transferCardsTo(game.stackReceivingCard, 1);
-			game.renderStacks();
+			game.interface.renderStacks(game.stacks);
 			game.isTransferringCard = false;
 		} else {
 			// card is removed if beatable by other active card
 			let currentCard = stack.activeCard;
-			let activeCards = game.getActiveCards();
+			let activeCards = game.activeCards;
 			// TODO: if more than one card beats the current card, only remove one card from stack, ending loop
 			for (let i = 0; i < activeCards.length; i++) {
 				if (activeCards[i].beats(currentCard)) {
 					stack.transferCardsTo(game.deck.discardPile, 1);
-					game.renderStacks();
+					game.interface.renderStacks(game.stacks);
 					console.log(
 						`Card Removed: ${currentCard.value} of ${currentCard.suit}`
 					);
@@ -311,25 +305,25 @@ function handleClickStack(e) {
 	console.log('card clicked!');
 }
 
+function handleCardClick(e) {
+	console.log(e);
+}
+
 function handleClickDeal() {
-	console.log(game);
-	if (game && !game.resetting) {
-		game.deal();
-		if (game.checkGameOver()) game.end();
-		console.log('New cards dealt!');
-	} else {
+	if (game.resetting) {
 		game = new Game();
-		game.begin();
-		console.log('Begin game!');
+		game.deal();
+		console.log('Starting new game!');
+	} else {
+		game.deal();
+		console.log('Dealing!');
 	}
 }
 
-function handleStartGame() {
-	game = new Game();
-	game.begin();
-	console.log('Begin game!');
-}
+//
 
-const group1 = new CardGroup();
-const group2 = new CardGroup();
-const card3 = null;
+// INITIALIZE
+
+//
+
+let game = new Game();
