@@ -85,10 +85,11 @@ class CardGroup {
 	}
 }
 
-class DeckOfCards extends CardGroup {
+class Deck extends CardGroup {
 	constructor() {
 		super();
 		this.cards = this.buildDeck();
+		this.discardPile = new DiscardPile();
 	}
 	buildDeck() {
 		let cards = [];
@@ -99,43 +100,50 @@ class DeckOfCards extends CardGroup {
 			});
 		});
 		return cards;
+	}
+}
+class DiscardPile extends CardGroup {
+	constructor() {
+		super();
+		this.cards = [];
+	}
+}
+class CardStack extends CardGroup {
+	constructor() {
+		super();
+		this.cards = [];
+	}
+	get canReceiveCard() {
+		return this.empty ? true : false;
+	}
+	get canDestroyCard() {
+		let activeCards = game.getActiveCards();
+		return (
+			activeCards.filter(card => {
+				return (
+					card.suit === this.activeCard.suit &&
+					card.value > this.activeCard.value
+				);
+			}).length > 1
+		);
+	}
+}
+class Card {
+	constructor(value, suit) {
+		this.value = value;
+		this.suit = suit;
+	}
+	beats(otherCard) {
+		if (!otherCard) return false;
+		console.log(
+			`Checking if ${this.value} of ${this.suit} beats ${otherCard.value} of ${
+				this.suit
+			}`
+		);
+		return this.suit === otherCard.suit && this.value > otherCard.value;
 	}
 }
 
-class Deck {
-	constructor() {
-		this.cards = this.buildDeck();
-		this.discarded = [];
-	}
-	buildDeck() {
-		let cards = [];
-		CARD_SUITS.forEach(suit => {
-			CARD_VALUES.forEach(value => {
-				let newCard = new Card(value, suit);
-				cards.push(newCard);
-			});
-		});
-		return cards;
-	}
-	shuffle() {
-		let currentIndex = this.cards.length,
-			temporaryValue,
-			randomIndex;
-		while (currentIndex !== 0) {
-			randomIndex = Math.floor(Math.random() * currentIndex);
-			currentIndex -= 1;
-			temporaryValue = this.cards[currentIndex];
-			this.cards[currentIndex] = this.cards[randomIndex];
-			this.cards[randomIndex] = temporaryValue;
-		}
-	}
-	removeCard() {
-		return this.cards.pop();
-	}
-	empty() {
-		return this.cards.length < 1;
-	}
-}
 class Game {
 	constructor() {
 		this.deck = new Deck();
@@ -168,18 +176,18 @@ class Game {
 			this.checkGameOver();
 		} else {
 			for (let i = 0; i < DEF_STACKS; i++) {
-				this.stacks[i].cards.push(this.deck.removeCard());
+				this.deck.transferCardsTo(this.stacks[i], 1);
 			}
 			this.renderStacks();
 		}
 	}
 	getActiveCards() {
 		let active = [];
-		this.stacks.forEach(stack => active.push(stack.getActiveCard()));
+		this.stacks.forEach(stack => active.push(stack.activeCard));
 		return active;
 	}
 	getCardsInPlay() {
-		return 52 - (this.deck.cards.length + this.deck.discarded.length);
+		return 52 - (this.deck.cards.length + this.deck.discardPile.length);
 	}
 	isOutOfMoves() {
 		if (this.stacks.filter(stack => stack.isRemovable()).length === 0)
@@ -218,58 +226,6 @@ class Game {
 		}
 		resultsDisplay.innerHTML = `<h1 class='result-message'>${gameOverMessage}</h1>`;
 		this.resetting = true;
-	}
-}
-
-class Card {
-	constructor(value, suit) {
-		this.value = value;
-		this.suit = suit;
-		this.name = `${CARD_NAME_LOOKUP[value] || value} of ${suit}`;
-	}
-	isBeatenBy(card) {
-		if (!card) {
-			console.log('Card is falsy');
-			return false;
-		}
-		console.log(`Checking if ${card.name} beats ${this.name}`);
-		if (this.suit == card.suit && card.value > this.value) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-}
-
-class CardStack {
-	constructor(cards) {
-		this.cards = cards || [];
-	}
-	getActiveCard() {
-		return this.cards[this.cards.length - 1];
-	}
-	addCard(card) {
-		this.cards.push(card);
-	}
-	removeCard() {
-		let removed = this.cards.pop();
-		game.deck.discarded.push(removed);
-		return removed;
-	}
-	isEmpty() {
-		return this.cards.length === 0;
-	}
-	transferCard(stack) {
-		stack.addCard(this.cards.pop());
-	}
-	isRemovable() {
-		if (this.isEmpty()) return false;
-		let options = game.getActiveCards();
-		return (
-			options.filter(card => {
-				return this.getActiveCard().isBeatenBy(card);
-			}).length > 0
-		);
 	}
 }
 
@@ -323,8 +279,7 @@ function handleClickStack(e) {
 		}
 	});
 	let stack = game.stacks[parseInt(stackNum) - 1];
-	let empty = stack.isEmpty();
-	if (empty) {
+	if (stack.empty) {
 		game.isTransferringCard = true;
 		game.stackReceivingCard = stack;
 		// player must select card to add to stack
@@ -333,19 +288,21 @@ function handleClickStack(e) {
 		console.log(game.stackReceivingCard);
 	} else {
 		if (game.isTransferringCard) {
-			stack.transferCard(game.stackReceivingCard);
+			stack.transferCardsTo(game.stackReceivingCard, 1);
 			game.renderStacks();
 			game.isTransferringCard = false;
 		} else {
 			// card is removed if beatable by other active card
-			let currentCard = stack.getActiveCard();
+			let currentCard = stack.activeCard;
 			let activeCards = game.getActiveCards();
 			// TODO: if more than one card beats the current card, only remove one card from stack, ending loop
 			for (let i = 0; i < activeCards.length; i++) {
-				if (currentCard.isBeatenBy(activeCards[i])) {
-					stack.removeCard();
+				if (activeCards[i].beats(currentCard)) {
+					stack.transferCardsTo(game.deck.discardPile, 1);
 					game.renderStacks();
-					console.log(`Card Removed: ${currentCard.name}`);
+					console.log(
+						`Card Removed: ${currentCard.value} of ${currentCard.suit}`
+					);
 					return;
 				}
 			}
@@ -375,4 +332,4 @@ function handleStartGame() {
 
 const group1 = new CardGroup();
 const group2 = new CardGroup();
-const group3 = new DeckOfCards(100);
+const card3 = null;
