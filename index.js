@@ -84,7 +84,7 @@ class Interface {
 		let gameOverMessage;
 		let score = game.cardsInPlay;
 		if (score > 22) {
-			gameOverMessage = `Woah buddy, you got absolutely wrecked. You scored ${score}. Check yourself first next time`;
+			gameOverMessage = `Woah buddy, you got absolutely wrecked. You scored ${score}. Check yourself first next time.`;
 			this.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/ADr35Z4TvATIc/source.gif" alt="Most interesting man facepalm" />`;
 		} else if (score > 17) {
 			gameOverMessage = `${score}... Not the best, not the worst either. But very close to the worst. Go again?`;
@@ -202,19 +202,6 @@ class Game {
 	get hasEmptyStack() {
 		return this.activeCards.length !== CONFIG.STACK_NUMBER;
 	}
-	buildStacks(numOfStacks) {
-		let stacks = [];
-		for (let i = 0; i < numOfStacks; i++) {
-			stacks.push(new CardStack());
-		}
-		return stacks;
-	}
-	deal() {
-		for (let i = 0; i < CONFIG.STACK_NUMBER; i++) {
-			this.deck.transferCardsTo(this.stacks[i], 1);
-		}
-		this.interface.renderStacks(this.stacks);
-	}
 	get isAnyCardRemovable() {
 		let suits = this.activeCards.map(card => card.suit);
 		// if unique set of suits is less than suits, there must be a duplicate (e.g ['diamonds', 'clubs'] from ['diamonds', 'clubs', 'clubs'])
@@ -225,11 +212,40 @@ class Game {
 			this.isAnyCardRemovable || (this.hasEmptyStack && this.hasLayeredStacks)
 		);
 	}
+	checkGameOver() {
+		if (this.deck.cards.length == 0) {
+			if (!this.playable) {
+				this.end();
+				return true;
+			} else {
+				console.log("You've still got moves left!");
+				return false;
+			}
+		}
+	}
+	prepareToTransfer(stack) {
+		this.stackReceivingCard = stack;
+		this.isTransferringCard = true;
+	}
+	buildStacks(numOfStacks) {
+		let stacks = [];
+		for (let i = 0; i < numOfStacks; i++) {
+			stacks.push(new CardStack());
+		}
+		return stacks;
+	}
+	deal() {
+		if (this.deck.empty) return;
+		for (let i = 0; i < CONFIG.STACK_NUMBER; i++) {
+			this.deck.transferCardsTo(this.stacks[i], 1);
+		}
+		this.interface.renderStacks(this.stacks);
+	}
 	end() {
 		setTimeout(() => {
 			this.interface.renderGameOver();
 			this.resetting = true;
-		}, 1000);
+		}, 1500);
 	}
 }
 
@@ -239,39 +255,30 @@ class Game {
 
 //
 
-// TODO: Refactor into multiple functions
 function handleStackClick(e) {
-	let stackNum;
-	e.path.forEach(p => {
-		if (p.id && p.id.includes('stack')) {
-			stackNum = p.id.split('-')[1];
-		}
-	});
-	// found specific stack that was clicked
-	let stack = game.stacks[parseInt(stackNum) - 1];
+	// Get clicked stack object
+	let stackNum = e.path
+		.filter(p => p.id && p.id.includes('stack'))[0]
+		.id.split('-')[1];
+	let stack = game.stacks[stackNum - 1];
+	// Prepare for transfer if stack is empty
 	if (stack.empty) {
-		// game.prepareToTransfer()
-		game.isTransferringCard = true;
-		game.stackReceivingCard = stack;
+		game.prepareToTransfer(stack);
 	} else {
 		if (game.isTransferringCard) {
-			// Transfer has been initiated
-			// game.transferToEmptyStack()
+			// Move card from clicked stack to stackReceivingCard
 			stack.transferCardsTo(game.stackReceivingCard, 1);
 			game.interface.renderStacks(game.stacks);
 			game.isTransferringCard = false;
 		} else {
-			// Check if card can be removed
-			let currentCard = stack.activeCard;
-			let activeCards = game.activeCards;
-			// TODO: if more than one card beats the current card, only remove one card from stack, ending loop
-			for (let i = 0; i < activeCards.length; i++) {
-				if (activeCards[i].beats(currentCard)) {
+			// Check if any active card can beat selected card
+			for (let i = 0; i < game.activeCards.length; i++) {
+				if (game.activeCards[i].beats(stack.activeCard)) {
 					stack.transferCardsTo(game.deck.discardPile, 1);
+					// TODO: Render just the cards that have changed, not all stacks
 					game.interface.renderStacks(game.stacks);
-					if (game.deck.cards.length == 0) {
-						if (!game.playable) game.end();
-					}
+					// Check if this move has caused game to end
+					game.checkGameOver();
 					return;
 				}
 			}
@@ -283,18 +290,9 @@ function handleClickDeal() {
 	if (game.resetting) {
 		game = new Game();
 		game.deal();
-		console.log('Starting new game!');
 	} else {
-		if (game.deck.cards.length == 0) {
-			if (!game.playable) {
-				game.end();
-			} else {
-				console.log("You've still got moves left!");
-			}
-		} else {
-			game.deal();
-			console.log('Dealing!');
-		}
+		game.checkGameOver();
+		game.deal();
 	}
 }
 
