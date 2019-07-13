@@ -206,7 +206,7 @@ class Game {
 		this.resetting = false;
 	}
 	get activeCards() {
-		return this.stacks.map(stack => stack.activeCard);
+		return this.stacks.map(stack => stack.activeCard).filter(card => card);
 	}
 	get cardsInPlay() {
 		return 52 - (this.deck.cards.length + this.deck.discardPile.cards.length);
@@ -218,6 +218,9 @@ class Game {
 			}).length > 0
 		);
 	}
+	get hasEmptyStack() {
+		return this.activeCards.length !== CONFIG.STACK_NUMBER;
+	}
 	buildStacks(numOfStacks) {
 		let stacks = [];
 		for (let i = 0; i < numOfStacks; i++) {
@@ -227,7 +230,7 @@ class Game {
 	}
 	deal() {
 		if (this.deck.cards.length == 0) {
-			this.checkGameOver();
+			this.isGameOver;
 		} else {
 			for (let i = 0; i < CONFIG.STACK_NUMBER; i++) {
 				this.deck.transferCardsTo(this.stacks[i], 1);
@@ -235,25 +238,22 @@ class Game {
 			this.interface.renderStacks(this.stacks);
 		}
 	}
+	get isAnyCardRemovable() {
+		let suits = this.activeCards.map(card => card.suit);
+		// if unique set of suits is less than suits, there must be a duplicate (e.g ['diamonds', 'clubs'] from ['diamonds', 'clubs', 'clubs'])
+		return [...new Set(suits)].length < suits.length;
+	}
 	get playable() {
-		let multipleCardStacks = game.hasLayeredStacks;
 		return (
-			this.stacks.filter((stack, i) => {	
-				// Playable if card can be destroyed OR IF card can be moved from stack with >1 card to empty stack
-				return (
-					stack.canDestroyCard(this.activeCards) ||
-					(stack.canReceiveCard && multipleCardStacks)
-				);
-			}).length > 0
+			this.isAnyCardRemovable || (this.hasEmptyStack && this.hasLayeredStacks)
 		);
 	}
-	checkGameOver() {
+	get isGameOver() {
 		if (game.deck.cards.length === 0 && !game.playable) {
 			return true;
 		}
 		return false;
 	}
-
 	end() {
 		this.interface.renderGameOver();
 		this.resetting = true;
@@ -268,7 +268,7 @@ class Game {
 
 // TODO: Refactor into multiple functions
 function handleStackClick(e) {
-	if (game.checkGameOver()) game.end();
+	if (game.isGameOver) game.end();
 	let stackNum;
 	e.path.forEach(p => {
 		if (p.id && p.id.includes('stack')) {
