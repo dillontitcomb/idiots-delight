@@ -79,6 +79,31 @@ class Interface {
 			this.stackNodes[i].innerHTML = this.renderStack(stack);
 		});
 	}
+	renderGameOver() {
+		this.stacksDisplay.style = 'visibility: hidden';
+		let gameOverMessage;
+		let score = game.cardsInPlay;
+		if (score > 22) {
+			gameOverMessage = `Woah buddy, you got absolutely wrecked. You scored ${score}. Check yourself first next time`;
+			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/ADr35Z4TvATIc/source.gif" alt="Most interesting man facepalm" />`;
+		} else if (score > 17) {
+			gameOverMessage = `${score}... Not the best, not the worst either. But very close to the worst. Go again?`;
+			this.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/iA8jqAN2GXSTe/giphy.gif" alt="Lost character amazed" />`;
+		} else if (score > 13) {
+			gameOverMessage = `${score}, huh. Highly mediocre. Try again. Or don't.`;
+			this.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/3w9EFfTjaLb7q/giphy.gif" alt="Charlie from IASIP" />`;
+		} else if (score > 8) {
+			gameOverMessage = `Nice. Nothing to write home about, but good. You scored ${score}.`;
+			this.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif" alt="Thumbs up kid" />`;
+		} else if (score > 4) {
+			gameOverMessage = `You got robbed. If only things had gone a bit differently. You scored ${score}.`;
+			this.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/xVT8eyqSZobZUxCknb/giphy-downsized.gif" alt="Bball player" />`;
+		} else {
+			gameOverMessage = `HOLY MOTHER OF GOD YOU'VE DONE IT. YOU'RE A LEGEND. IF I'D MADE A LEADERBOARD FOR THIS GAME YOU'D BE AT THE TOP! YOU SCORED A FLAWLESS ${score}!`;
+			this.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/AVBo5eqFXd3SU/giphy.gif" alt="Lost character amazed" />`;
+		}
+		this.resultsDisplay.innerHTML = `<h1 class='result-message'>${gameOverMessage}</h1>`;
+	}
 }
 
 class CardGroup {
@@ -89,7 +114,7 @@ class CardGroup {
 		return this.cards.length ? false : true;
 	}
 	get activeCard() {
-		return this.empty ? null : this.cards[this.cards.length - 1];
+		return this.empty ? '' : this.cards[this.cards.length - 1];
 	}
 	shuffle() {
 		let currentIndex = this.cards.length,
@@ -140,16 +165,17 @@ class CardStack extends CardGroup {
 		this.cards = [];
 	}
 	get canReceiveCard() {
-		return this.empty ? true : false;
+		return this.empty;
 	}
-	get canDestroyCard() {
-		let activeCards = game.activeCards;
+	get hasMultipleCards() {
+		return this.cards.length > 1;
+	}
+	canDestroyCard(activeCards) {
+		console.log(activeCards);
 		return (
 			activeCards.filter(card => {
-				return (
-					card.suit === this.activeCard.suit &&
-					card.value > this.activeCard.value
-				);
+				console.log(card);
+				return card ? card.beats(this.activeCard) : false;
 			}).length > 1
 		);
 	}
@@ -161,11 +187,11 @@ class Card {
 	}
 	beats(otherCard) {
 		if (!otherCard) return false;
-		console.log(
-			`Checking if ${this.value} of ${this.suit} beats ${otherCard.value} of ${
-				this.suit
-			}`
-		);
+		// console.log(
+		// 	`Checking if ${this.value} of ${this.suit} beats ${otherCard.value} of ${
+		// 		this.suit
+		// 	}`
+		// );
 		return this.suit === otherCard.suit && this.value > otherCard.value;
 	}
 }
@@ -179,8 +205,18 @@ class Game {
 		this.stackReceivingCard = null;
 		this.resetting = false;
 	}
-	begin() {
-		this.deal();
+	get activeCards() {
+		return this.stacks.map(stack => stack.activeCard);
+	}
+	get cardsInPlay() {
+		return 52 - (this.deck.cards.length + this.deck.discardPile.cards.length);
+	}
+	get hasLayeredStacks() {
+		return (
+			this.stacks.filter(stack => {
+				return stack.hasMultipleCards;
+			}).length > 0
+		);
 	}
 	buildStacks(numOfStacks) {
 		let stacks = [];
@@ -189,7 +225,6 @@ class Game {
 		}
 		return stacks;
 	}
-
 	deal() {
 		if (this.deck.cards.length == 0) {
 			this.checkGameOver();
@@ -200,48 +235,27 @@ class Game {
 			this.interface.renderStacks(this.stacks);
 		}
 	}
-	get activeCards() {
-		return this.stacks.map(stack => stack.activeCard);
-	}
-	getCardsInPlay() {
-		return 52 - (this.deck.cards.length + this.deck.discardPile.cards.length);
-	}
-	isOutOfMoves() {
-		if (this.stacks.filter(stack => stack.isRemovable()).length === 0)
-			return true;
-		return false;
+	get playable() {
+		let multipleCardStacks = game.hasLayeredStacks;
+		return (
+			this.stacks.filter((stack, i) => {	
+				// Playable if card can be destroyed OR IF card can be moved from stack with >1 card to empty stack
+				return (
+					stack.canDestroyCard(this.activeCards) ||
+					(stack.canReceiveCard && multipleCardStacks)
+				);
+			}).length > 0
+		);
 	}
 	checkGameOver() {
-		if (game.deck.cards.length === 0 && game.isOutOfMoves()) {
+		if (game.deck.cards.length === 0 && !game.playable) {
 			return true;
 		}
 		return false;
 	}
 
 	end() {
-		this.interface.stacksDisplay.style = 'visibility: hidden';
-		let gameOverMessage;
-		let score = game.getCardsInPlay();
-		if (score > 22) {
-			gameOverMessage = `Woah buddy, you got absolutely wrecked. You scored ${score}. Check yourself first next time`;
-			resultsGif.innerHTML = `<img src="https://media.giphy.com/media/ADr35Z4TvATIc/source.gif" alt="Most interesting man facepalm" />`;
-		} else if (score > 17) {
-			gameOverMessage = `${score}... Not the best, not the worst either. But very close to the worst. Go again?`;
-			this.interface.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/iA8jqAN2GXSTe/giphy.gif" alt="Lost character amazed" />`;
-		} else if (score > 13) {
-			gameOverMessage = `${score}, huh. Highly mediocre. Try again. Or don't.`;
-			this.interface.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/3w9EFfTjaLb7q/giphy.gif" alt="Charlie from IASIP" />`;
-		} else if (score > 8) {
-			gameOverMessage = `Nice. Nothing to write home about, but good. You scored ${score}.`;
-			this.interface.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/11ISwbgCxEzMyY/giphy.gif" alt="Thumbs up kid" />`;
-		} else if (score > 4) {
-			gameOverMessage = `You got robbed. If only things had gone a bit differently. You scored ${score}.`;
-			this.interface.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/xVT8eyqSZobZUxCknb/giphy-downsized.gif" alt="Bball player" />`;
-		} else {
-			gameOverMessage = `HOLY MOTHER OF GOD YOU'VE DONE IT. YOU'RE A LEGEND. IF I'D MADE A LEADERBOARD FOR THIS GAME YOU'D BE AT THE TOP! YOU SCORED A FLAWLESS ${score}!`;
-			this.interface.resultsGif.innerHTML = `<img src="https://media.giphy.com/media/AVBo5eqFXd3SU/giphy.gif" alt="Lost character amazed" />`;
-		}
-		this.interface.resultsDisplay.innerHTML = `<h1 class='result-message'>${gameOverMessage}</h1>`;
+		this.interface.renderGameOver();
 		this.resetting = true;
 	}
 }
