@@ -289,11 +289,10 @@ function handleStackClick(e) {
 function handleClickDeal() {
 	if (game.resetting) {
 		game = new Game();
-		game.deal();
 	} else {
 		game.checkGameOver();
-		game.deal();
 	}
+	game.deal();
 }
 
 //
