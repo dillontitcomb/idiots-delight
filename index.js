@@ -287,7 +287,8 @@ class Game {
 function handleStackClick(e) {
 	game.savePreviousGameState();
 	// Get clicked stack object
-	let stackNum = e.path
+	let stackNum = e
+		.composedPath()
 		.filter(p => p.id && p.id.includes('stack'))[0]
 		.id.split('-')[1];
 	let stack = game.stacks[stackNum - 1];
