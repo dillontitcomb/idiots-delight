@@ -14,8 +14,10 @@
 body {
 	font-family: 'Roboto', sans-serif;
 	line-height: 1.6;
-	background-color: #dddddd;
-	color: #333;
+	background: #2d4343;
+	/* background: url('./img/trees.jpg') no-repeat fixed center;
+	background-size: 100%; */
+	color: whitesmoke;
 }
 
 .container {
@@ -27,10 +29,10 @@ body {
 }
 
 .stacks {
+	margin-top: 1rem;
 	display: flex;
 	flex-direction: row;
 	align-items: flex-start;
-	background-color: #dddddd;
 }
 
 .stack {
@@ -39,17 +41,21 @@ body {
 	flex-direction: column;
 	flex: 1;
 }
+
 .card {
-	border: 1px solid #fff;
 	margin: auto;
 	height: 350px;
 	width: 250px;
-	background-color: white;
+	background-color: #f0f0f0;
 	display: flex;
 	flex-direction: column;
 	border-radius: 3%;
 	overflow: hidden;
-	box-shadow: 0 -4px 3px -2px gray, 4px 0px 3px -2px gray;
+	box-shadow: 0 -4px 3px -2px gray;
+}
+
+.card:hover {
+	cursor: pointer;
 }
 
 .card-top {
@@ -86,8 +92,23 @@ body {
 
 .card-stub {
 	margin-bottom: -280px;
-	box-shadow: 0 -4px 3px -2px gray, 4px 0px 3px -2px gray;
+	box-shadow: 0 -4px 3px -2px gray;
 	border-radius: 3% 3% 0 0;
+}
+
+.card.empty-card {
+	box-shadow: none;
+	background: #2d4343;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	border: 2px dashed #f28cf2;
+}
+.move-card-warning {
+	padding: 2rem;
+	text-align: center;
+	color: #f28cf2;
 }
 
 i.fa-spade {
@@ -108,6 +129,7 @@ i.fa-diamond {
 }
 
 .start-menu {
+	margin-bottom: 1rem;
 	margin-top: 1rem;
 }
 
@@ -117,32 +139,51 @@ i.fa-diamond {
 
 #how-to-play {
 	display: none;
+	padding: 1rem;
+	width: 500px;
+	margin: auto;
+	border-radius: 1%;
+	/* box-shadow: 0 4px 3px -2px gray, 4px 0px 3px -2px gray; */
 }
 
 .how-to-play-header {
-	margin-top: 2rem;
 }
 
 .instructions {
+	padding: 1rem;
 	margin: auto;
-	margin-top: 2rem;
-	max-width: 600px;
-	text-align: left;
+	text-align: center;
 }
 
 .btn {
-	display: block;
+	border: none;
+	display: inline-block;
 	margin: auto;
-	margin-top: 1rem;
-	margin-bottom: 1rem;
-	height: 40px;
-	width: 120px;
-	background: black;
-	color: white;
+	margin-top: 0.5rem;
+	margin-bottom: 0.5rem;
+	min-height: 40px;
+	min-width: 100px;
+	background: #b814b8;
+	color: whitesmoke;
 	text-align: center;
+	border-radius: 5%;
 }
+.btn-secondary {
+	background: rgb(172, 172, 172);
+	color: #800d80;
+}
+.btn-secondary:hover {
+	background: rgb(223, 223, 223);
+	color: #800d80;
+	cursor: pointer;
+}
+
 .btn:focus {
 	outline: 0;
+}
+.btn-primary:hover {
+	background: #f28cf2;
+	cursor: pointer;
 }
 
 a {
@@ -153,9 +194,22 @@ li {
 	margin-top: 0.5rem;
 }
 
+#cards-remaining {
+	margin: 1rem;
+}
+
 .result-message {
 	margin: auto;
 	display: block;
 	font-weight: bold;
 	width: 600px;
+}
+
+.game-stats {
+	display: inline-block;
+}
+
+.score-value {
+	color: #f28cf2;
+	font-weight: bold;
 }

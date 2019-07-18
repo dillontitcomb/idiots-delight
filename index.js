@@ -3,7 +3,6 @@
 // CONSTANTS
 
 //
-
 const CONFIG = {
 	STACK_NUMBER: 4,
 	CARD_VALUES: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
@@ -19,19 +18,19 @@ const CONFIG = {
 		13: 'fas fa-crown'
 	}
 };
-
 //
 
 // CLASSES
 
 //
-
 class Interface {
 	constructor() {
 		this.resultsDisplay = document.getElementById('results');
 		this.resultsGif = document.getElementById('results-party');
 		this.stacksDisplay = document.getElementsByClassName('stacks')[0];
 		this.stackGroup = document.getElementsByClassName('stack');
+		this.cardsRemaining = document.getElementById('cards-remaining');
+		this.currentScore = document.getElementById('current-score');
 		this.stackNodes = [
 			this.stackGroup[0],
 			this.stackGroup[1],
@@ -65,19 +64,35 @@ class Interface {
 	}
 	renderStack(stack) {
 		let html = '';
-		stack.cards.forEach((card, i) => {
-			let lastCard = false;
-			if (i == stack.cards.length - 1) lastCard = true;
-			html += lastCard
-				? this.renderCard(card, true)
-				: this.renderCard(card, false);
-		});
+		if (stack.cards.length === 0) {
+			html = `<div class="card empty-card" onclick='handleEmptyCardClick(event)'>
+			<p class="move-card-warning">CLICK HERE TO INITIATE CARD TRANSFER</p>
+			</div>`;
+		} else {
+			stack.cards.forEach((card, i) => {
+				let lastCard = false;
+				if (i == stack.cards.length - 1) lastCard = true;
+				html += lastCard
+					? this.renderCard(card, true)
+					: this.renderCard(card, false);
+			});
+		}
 		return html;
 	}
 	renderStacks(stacks) {
 		stacks.forEach((stack, i) => {
 			this.stackNodes[i].innerHTML = this.renderStack(stack);
 		});
+	}
+	updateCardsRemaining(deck) {
+		this.cardsRemaining.innerHTML = `<h3 >Cards Remaining: <span class="score-value">${
+			deck.cards.length
+		}</span></h3>`;
+	}
+	updateCurrentScore(game) {
+		this.currentScore.innerHTML = `<h3>Score: <span class="score-value">${
+			game.cardsInPlay
+		}</span></h3>`;
 	}
 	renderGameOver() {
 		this.stacksDisplay.style = 'visibility: hidden';
@@ -141,9 +156,9 @@ class CardGroup {
 }
 
 class Deck extends CardGroup {
-	constructor() {
+	constructor(cards) {
 		super();
-		this.cards = this.buildDeck();
+		this.cards = cards || this.buildDeck();
 		this.shuffle();
 		this.discardPile = new CardGroup();
 	}
@@ -189,6 +204,7 @@ class Game {
 		this.isTransferringCard = false;
 		this.stackReceivingCard = null;
 		this.resetting = false;
+		this.previousGameState = null;
 	}
 	get activeCards() {
 		return this.stacks.map(stack => stack.activeCard).filter(card => card);
@@ -234,12 +250,25 @@ class Game {
 		}
 		return stacks;
 	}
+	savePreviousGameState() {
+		let clonedStacks = [];
+		let clonedDeck = new Deck([...game.deck.cards]);
+		this.stacks.forEach(stack => {
+			let newStack = new CardStack();
+			newStack.cards = [...stack.cards];
+			clonedStacks.push(newStack);
+		});
+		this.previousGameState = clonedStacks;
+		this.previousDeckState = clonedDeck;
+	}
 	deal() {
 		if (this.deck.empty) return;
 		for (let i = 0; i < CONFIG.STACK_NUMBER; i++) {
 			this.deck.transferCardsTo(this.stacks[i], 1);
 		}
 		this.interface.renderStacks(this.stacks);
+		this.interface.updateCardsRemaining(this.deck);
+		this.interface.updateCurrentScore(this);
 	}
 	end() {
 		setTimeout(() => {
@@ -256,6 +285,7 @@ class Game {
 //
 
 function handleStackClick(e) {
+	game.savePreviousGameState();
 	// Get clicked stack object
 	let stackNum = e.path
 		.filter(p => p.id && p.id.includes('stack'))[0]
@@ -277,22 +307,41 @@ function handleStackClick(e) {
 					stack.transferCardsTo(game.deck.discardPile, 1);
 					// TODO: Render just the cards that have changed, not all stacks
 					game.interface.renderStacks(game.stacks);
+					game.interface.updateCardsRemaining(game.deck);
+					game.interface.updateCurrentScore(game);
 					// Check if this move has caused game to end
 					game.checkGameOver();
 					return;
 				}
 			}
 		}
+		game.interface.updateCardsRemaining(game.deck);
+		game.interface.updateCurrentScore(game);
 	}
 }
 
+function handleEmptyCardClick(e) {
+	e.target.innerText = 'CLICK CARD YOU WANT TO TRANSFER';
+}
+
 function handleClickDeal() {
+	game.savePreviousGameState();
 	if (game.resetting) {
 		game = new Game();
 	} else {
 		game.checkGameOver();
 	}
 	game.deal();
+}
+
+function handleUndo() {
+	if (game.previousGameState) {
+		game.stacks = game.previousGameState;
+		game.deck = game.previousDeckState;
+		game.interface.renderStacks(game.stacks);
+		game.interface.updateCardsRemaining(game.deck);
+		game.interface.updateCurrentScore(game);
+	}
 }
 
 //
