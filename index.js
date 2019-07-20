@@ -144,6 +144,7 @@ class CardGroup {
 		}
 	}
 	transferCardsTo(recipient, numOfCards) {
+		if (this.cards < 1) return;
 		let newEvent = new TransferCardsEvent(this, recipient, []);
 		for (let i = 0; i < numOfCards; i++) {
 			let card = this.cards.pop();
@@ -216,7 +217,6 @@ class Game {
 		this.isTransferringCard = false;
 		this.stackReceivingCard = null;
 		this.resetting = false;
-		this.previousGameState = null;
 	}
 	get activeCards() {
 		return this.stacks.map(stack => stack.activeCard).filter(card => card);
@@ -262,17 +262,6 @@ class Game {
 		}
 		return stacks;
 	}
-	savePreviousGameState() {
-		let clonedStacks = [];
-		let clonedDeck = new Deck([...game.deck.cards]);
-		this.stacks.forEach(stack => {
-			let newStack = new CardStack();
-			newStack.cards = [...stack.cards];
-			clonedStacks.push(newStack);
-		});
-		this.previousGameState = clonedStacks;
-		this.previousDeckState = clonedDeck;
-	}
 	deal() {
 		if (this.deck.empty) return;
 		for (let i = 0; i < CONFIG.STACK_NUMBER; i++) {
@@ -283,15 +272,33 @@ class Game {
 		this.interface.updateCurrentScore(this);
 	}
 	undo() {
-		this.history.forEach(event => {
-			if (event.giver.constructor.name == 'Deck') {
-				console.log('Dealing event');
-			} else if (event.receiver.constructor.name == 'CardGroup') {
-				console.log('Card sent to the discard pile');
-			} else {
-				console.log('Card moved from stack to stack');
-			}
-		});
+		// Get last event
+		if (this.history.length < 1) return;
+		let numOfEvents = this.history.length;
+		let event = this.history[numOfEvents - 1];
+		if (event.giver.constructor.name == 'Deck') {
+			//  If dealing, get all cards (events) dealt
+			let dealEvents = this.history.slice(
+				numOfEvents - CONFIG.STACK_NUMBER,
+				numOfEvents
+			);
+			let remainingEvents = this.history.slice(
+				0,
+				numOfEvents - CONFIG.STACK_NUMBER
+			);
+			dealEvents.forEach(event =>
+				event.receiver.transferCardsTo(event.giver, 1)
+			);
+			this.history = remainingEvents;
+		} else {
+			// If not dealing, just reverse last event and destroy both original event and the reverse event
+			event.receiver.transferCardsTo(event.giver, 1);
+			this.history.pop();
+			this.history.pop();
+		}
+		this.interface.renderStacks(this.stacks);
+		this.interface.updateCardsRemaining(this.deck);
+		this.interface.updateCurrentScore(this);
 	}
 	end() {
 		setTimeout(() => {
@@ -308,7 +315,6 @@ class Game {
 //
 
 function handleStackClick(e) {
-	game.savePreviousGameState();
 	// Get clicked stack object
 	let stackNum = e
 		.composedPath()
@@ -349,7 +355,6 @@ function handleEmptyCardClick(e) {
 }
 
 function handleClickDeal() {
-	game.savePreviousGameState();
 	if (game.resetting) {
 		game = new Game();
 	} else {
@@ -359,13 +364,7 @@ function handleClickDeal() {
 }
 
 function handleUndo() {
-	if (game.previousGameState) {
-		game.stacks = game.previousGameState;
-		game.deck = game.previousDeckState;
-		game.interface.renderStacks(game.stacks);
-		game.interface.updateCardsRemaining(game.deck);
-		game.interface.updateCurrentScore(game);
-	}
+	game.undo();
 }
 
 //
