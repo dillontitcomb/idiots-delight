@@ -144,9 +144,13 @@ class CardGroup {
 		}
 	}
 	transferCardsTo(recipient, numOfCards) {
+		let newEvent = new TransferCardsEvent(this, recipient, []);
 		for (let i = 0; i < numOfCards; i++) {
-			recipient.cards.push(this.cards.pop());
+			let card = this.cards.pop();
+			recipient.cards.push(card);
+			newEvent.cards.push(card);
 		}
+		game.history.push(newEvent);
 	}
 	receiveCardsFrom(provider, numOfCards) {
 		for (let i = 0; i < numOfCards; i++) {
@@ -195,12 +199,20 @@ class Card {
 		return this.suit === otherCard.suit && this.value > otherCard.value;
 	}
 }
+class TransferCardsEvent {
+	constructor(giver, receiver, cards) {
+		this.giver = giver;
+		this.receiver = receiver;
+		this.cards = cards;
+	}
+}
 
 class Game {
 	constructor() {
 		this.deck = new Deck();
 		this.stacks = this.buildStacks(CONFIG.STACK_NUMBER);
 		this.interface = new Interface();
+		this.history = [];
 		this.isTransferringCard = false;
 		this.stackReceivingCard = null;
 		this.resetting = false;
@@ -269,6 +281,17 @@ class Game {
 		this.interface.renderStacks(this.stacks);
 		this.interface.updateCardsRemaining(this.deck);
 		this.interface.updateCurrentScore(this);
+	}
+	undo() {
+		this.history.forEach(event => {
+			if (event.giver.constructor.name == 'Deck') {
+				console.log('Dealing event');
+			} else if (event.receiver.constructor.name == 'CardGroup') {
+				console.log('Card sent to the discard pile');
+			} else {
+				console.log('Card moved from stack to stack');
+			}
+		});
 	}
 	end() {
 		setTimeout(() => {
