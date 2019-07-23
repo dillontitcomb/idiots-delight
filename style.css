@@ -105,6 +105,18 @@ body {
 	justify-content: center;
 	border: 2px dashed #f28cf2;
 }
+
+#deck {
+	transform: rotate(90deg);
+	background: #800d80;
+	box-shadow: none;
+}
+
+.deck {
+	height: 250px;
+	flex: 2;
+}
+
 .move-card-warning {
 	padding: 2rem;
 	text-align: center;
@@ -157,7 +169,7 @@ i.fa-diamond {
 
 .btn {
 	border: none;
-	display: inline-block;
+	display: block;
 	margin: auto;
 	margin-top: 0.5rem;
 	margin-bottom: 0.5rem;
@@ -192,6 +204,21 @@ a {
 
 li {
 	margin-top: 0.5rem;
+}
+
+.interface {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.button-panel {
+	flex: 1;
+}
+
+.header-text {
+	flex: 2;
 }
 
 #cards-remaining {

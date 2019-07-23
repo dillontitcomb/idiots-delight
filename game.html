@@ -10,12 +10,28 @@
 	</head>
 	<body>
 		<div class="container">
-			<h1 class="landing-header">Welcome to Idiot's Delight</h1>
-			<h3><em>A game for the proper intellectual</em></h3>
+			<div class="interface">
+				<div class="header-text">
+					<h1>Welcome to Idiot's Delight</h1>
+					<h3><em>A game for the proper intellectual</em></h3>
+				</div>
+				<div class="button-panel">
+					<button class="btn btn-primary" onclick="handleClickDeal()">
+						DEAL
+					</button>
+					<button class="btn btn-secondary" onclick="handleUndo()">UNDO</button>
+				</div>
+				<div class="deck">
+					<div class="card" id="deck">
+						<div class="card-top"></div>
+						<div class="card-mid"></div>
+						<div class="card-bot"></div>
+					</div>
+				</div>
+			</div>
+			<hr />
 			<div id="results-party"></div>
 			<div id="results"></div>
-			<button class="btn btn-primary" onclick="handleClickDeal()">DEAL</button>
-			<button class="btn btn-secondary" onclick="handleUndo()">UNDO</button>
 			<div class="stacks">
 				<div id="stack-1" class="stack"></div>
 				<div id="stack-2" class="stack"></div>
