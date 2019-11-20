@@ -1,42 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
-		<link rel="stylesheet" href="style.css" />
-		<title>Document</title>
-	</head>
-	<body>
-		<div class="container landing">
-			<h1 class="landing-header">Welcome to Idiot's Delight</h1>
-			<h3><em>A game for the proper intellectual</em></h3>
-			<div class="start-menu">
-				<a href="game.html"
-					><button class="btn btn-primary">START GAME</button></a
-				>
-				<br />
-				<button onclick="handleHowToPlay()" class="btn btn-secondary">
-					HOW TO PLAY
-				</button>
-				<div id="how-to-play">
-					<h2 class="how-to-play-header">
-						The rules of the game are quite simple.
-					</h2>
-					<div class="instructions">
-						<p>
-							If two cards are the same suit, the lower value card can be
-							removed. If a stack of cards is empty, any card can be moved to
-							that stack. To move a card to an empty stack, click the empty
-							stack, then click the card you want to move. If you are out of
-							options, click DEAL to get four new cards. If you've made a
-							terrible mistake, click UNDO to reverse one move.
-						</p>
-					</div>
-				</div>
-			</div>
-			<h6>By Dillon Titcomb, a proper intellectual</h6>
-		</div>
-		<script src="landing.js"></script>
-	</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="container landing">
+      <h1 class="landing-header">Welcome to Idiot's Delight</h1>
+      <h3><em>A game for the proper intellectual</em></h3>
+      <div class="start-menu">
+        <a href="game.html"><button class="btn btn-primary">START</button></a>
+        <br />
+        <button onclick="handleHowToPlay()" class="btn btn-secondary">
+          HOW TO PLAY
+        </button>
+        <div id="how-to-play">
+          <h2 class="how-to-play-header">
+            The rules of the game are quite simple.
+          </h2>
+          <div class="instructions">
+            <p>
+              If two cards are the same suit, the lower value card can be
+              removed. If a stack of cards is empty, any card can be moved to
+              that stack. To move a card to an empty stack, click the empty
+              stack, then click the card you want to move. If you are out of
+              options, click DEAL to get four new cards. If you've made a
+              terrible mistake, click UNDO to reverse one move.
+            </p>
+          </div>
+        </div>
+      </div>
+      <h6>By Dillon Titcomb, a proper intellectual</h6>
+    </div>
+    <script src="landing.js"></script>
+  </body>
 </html>
